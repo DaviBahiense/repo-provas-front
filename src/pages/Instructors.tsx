@@ -38,7 +38,7 @@ function Instructors() {
       setCategories(categoriesData.categories);
     }
     loadPage();
-  }, [token]);
+  }, [token]); 
 
   return (
     <>

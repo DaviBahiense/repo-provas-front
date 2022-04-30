@@ -17,7 +17,7 @@ import useAuth from "../hooks/useAuth";
 import api from "../services/api";
 
 const styles = {
-  container: {
+  container: { 
     marginTop: "180px",
     width: "460px",
     display: "flex",
