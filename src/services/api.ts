@@ -100,8 +100,10 @@ async function getDisciplines(token: string) {
   const config = getConfig(token);
   return baseAPI.get<{ disciplines: DataDiscipline[] }>("/disciplines", config);
 }
-async function getTeacherDiscipline(body: string) {
-  return baseAPI.post<{ teacherDiscipline: number }>("/teacherDiscipline", body);
+
+async function createTest(test: Test, token:string) {
+  const config = getConfig(token);
+  return baseAPI.post("/tests", test, config);
 }
 
 const api = {
@@ -112,7 +114,7 @@ const api = {
   getCategories,
   getTeachers,
   getDisciplines,
-  getTeacherDiscipline
+  createTest
 };
 
 export default api;

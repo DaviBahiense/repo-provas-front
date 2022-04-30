@@ -1,26 +1,14 @@
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
   Box,
   Button,
   Divider,
-  Link,
   TextField,
-  Typography,
   Autocomplete
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
-import api, {
-  Category,
-  Discipline,
-  TeacherDisciplines,
-  Test,
-  TestByDiscipline,
-} from "../services/api";
+import api from "../services/api";
 import Form from "../components/Form";
 import useAlert from "../hooks/useAlert";
 
@@ -43,193 +31,207 @@ function NewTest() {
             discipline: arrDisciplines.data,
             teacher: arrTeachers.data,
             category: arrCategories.data.categories,
-          })
+        })
     }
   
     useEffect(() => {
-      async function loadPage() {
-        if (!token) return;
-        getList(token)
-      }
-      loadPage();
+        async function loadPage() {
+            if (!token) return;
+            getList(token)
+        }
+        loadPage();
     }, [token]); 
   
     return (
       <>
         <TextField
-          sx={{ marginX: "auto", marginBottom: "25px", width: "450px" }}
-          label="Pesquise por pessoa instrutora"
+            sx={{ marginX: "auto", marginBottom: "25px", width: "450px" }}
+            label="Pesquise por pessoa instrutora"
         />
         <Divider sx={{ marginBottom: "35px" }} />
         <Box
-          sx={{
-            marginX: "auto",
-            width: "700px",
-          }}
-        >
-          <Box
             sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              flexWrap: "wrap",
+                marginX: "auto",
+                width: "700px",
             }}
-          >
-            <Button
-              variant="outlined"
-              onClick={() => navigate("/app/disciplinas")}
-            >
-              Disciplinas
-            </Button>
-            <Button
-              variant="outlined"
-              onClick={() => navigate("/app/pessoas-instrutoras")}
-            >
-              Pessoa Instrutora
-            </Button>
-            <Button variant="contained" onClick={() => navigate("/app/adicionar")}>
-              Adicionar
-            </Button>
+        >
+        <Box
+            sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+            }}
+        >
+        <Button
+            variant="outlined"
+            onClick={() => navigate("/app/disciplinas")}
+        >
+            Disciplinas
+        </Button>
+        <Button
+            variant="outlined"
+            onClick={() => navigate("/app/pessoas-instrutoras")}
+        >
+            Pessoa Instrutora
+        </Button>
+        <Button variant="contained" onClick={() => navigate("/app/adicionar")}>
+            Adicionar
+        </Button>
           </Box>
-          <FormDataTest list={list}/>
+          <FormDataTest list={list} token={token}/>
         </Box>
       </>
     );
 }
 
-function FormDataTest({list}:any) {
+function FormDataTest({list}:any, token:any) {
+
+    const [loading, setLoading] = useState(false)
     
-    const [formData, setFormData] = useState<FormData>({
+    const [formData, setFormData] = useState<any>({
         name: "",
         pdfUrl: "",
         category: "",
         discipline: "",
         teacher:""
     });
-    interface FormData {
-        name: string;
-        pdfUrl: string;
-        category: string;
-        discipline: string;
-        teacher: string;
-    }
 
     const { setMessage } = useAlert();
-
-    function handleInputChange(e: any) {
-
-        if (e.target.name === "pdfUrl" || e.target.name === "name"){setFormData({ ...formData, [e.target.name]: e.target.value });}
-        else if (e.target.className ){setFormData({ ...formData, [e.target.className]: e.target.innerText });}
-        console.log("e.target.name:", e.target.name) 
-        console.log("e.target.innerText:", e.target.innerText)
-        
-    }
     
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         setMessage(null);
-    
-        /* if (!formData?.name || !formData?.pdfUrl || formData?.categoryId === 0 || formData?.teacherDisciplineId === 0) {
-          setMessage({ type: "error", text: "Todos os campos são obrigatórios!" });
-          return;
-        } */
-       // const { name, pdfUrl, categoryId, teacherDisciplineId } = formData;
+
+        if (!formData?.name ||
+            !formData?.pdfUrl ||
+            !formData?.category  ||
+            !formData?.discipline ||
+            !formData?.teacher) {
+            setMessage({ type: "error", text: "Todos os campos são obrigatórios!" });
+            return;
+        } 
+        const test:any = {
+            name: formData.name,
+            pdfUrl: formData.pdfUrl,
+            categoryId: list.category.find((i: any) => 
+                i.name === formData.category).id,
+            teacherDisciplineId: list.teacher.find((i: any) =>
+                i.name === formData.teacher).teacherDisciplines.find((i: any) =>
+                i.disciplineId === list.discipline.find((i: any) =>
+                i.name === formData.discipline).id).id
+          }
+          
+        
+        try {
+            setLoading(true)
+            await api.createTest(test, token)
+
+            setLoading(false)
+        } catch (error) {
+            setMessage({ type: "error", text: "Ocorreu um erro após processamento" });
+        }
     }
 
     const styles = {
         container: { 
-          width: "697px",
-          display: "flex",
-          flexDirection: "column",
-          textAlign: "center",
+            width: "697px",
+            display: "flex",
+            flexDirection: "column",
+            textAlign: "center",
         },
         title: { marginBottom: "30px" },
         dividerContainer: {
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          marginTop: "16px",
-          marginBottom: "26px",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            marginTop: "16px",
+            marginBottom: "26px",
         },
         input: { marginBottom: "16px" },
         actionsContainer: {
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
         },
     };
 
-    function textFieldInput(name: string, value: any) {
+    function handleAutoInput(name: string, value: any) {
        setFormData({ ...formData, [name]: value })
     }
-
-    function handleFreeFormInput(event: any) {
+    function handleInput(event: any) {
        setFormData({ ...formData, [event.target.name]: event.target.value })
     }
-    
+
     return(
 
     <Form onSubmit={handleSubmit}>
       <Box sx={styles.container}>
         <TextField
-          name="name"
-          sx={styles.input}
-          label="Título da Prova"
-          type="text"
-          variant="outlined"
-          onChange={handleInputChange}
-          value={formData.name}
+            name="name"
+            sx={styles.input}
+            label="Título da Prova"
+            type="text"
+            variant="outlined"
+            onChange={handleInput}
+            value={formData.name}
         />
         <TextField
-          name="pdfUrl"
-          sx={styles.input}
-          label="Pdf da prova"
-          onChange={handleInputChange}
-          value={formData.pdfUrl}
+            name="pdfUrl"
+            sx={styles.input}
+            label="Pdf da prova"
+            onChange={handleInput}
+            value={formData.pdfUrl}
         />
          <Autocomplete
-          className="category"
-          sx={styles.input}
-          autoComplete={true}
-          options={list.category.map((e: any) => e.name)}
-          isOptionEqualToValue={(option, value) => option === value}
-          renderInput={(e) =>
-            <TextField
-              {...e}
-              label="Categoria"
-              size="medium"
-            />}
-          onInputChange={( event)=>handleInputChange( event)}
+            className="category"
+            sx={styles.input}
+            autoComplete={true}
+            options={list.category.map((e: any) => e.name)}
+            isOptionEqualToValue={(option, value) => option === value}
+            renderInput={(e) =>
+                <TextField
+                {...e}
+                label="Categoria"
+                size="medium"
+                />}
+            onInputChange={(e, value) => handleAutoInput("category", value)}
         />
         <Autocomplete
-          className="discipline"
-          sx={styles.input}
-          autoComplete={true}
-          options={list.teacher.map((e: any) => e.name)}
-          renderInput={(e) =>
-            <TextField
-              {...e}
-              label="Categoria"
-              size="medium"
-            />}
-          onInputChange={()=>handleInputChange}
+            className="discipline"
+            sx={styles.input}
+            autoComplete={true}
+            options={list.discipline.map((e: any) => e.name)}
+            renderInput={(e) =>
+                <TextField
+                {...e}
+                label="Disciplina"
+                size="medium"
+                />}
+            onInputChange={(e, value) => handleAutoInput("discipline", value)}
         />
         <Autocomplete
-          className="teacher"
-          sx={styles.input}
-          autoComplete={true}
-          options={list.discipline.map((e: any) => e.name)}
-          renderInput={(e) =>
-            <TextField
-              {...e}
-              label="Categoria"
-              size="medium"
-            />}
-          onInputChange={()=>handleInputChange}
+            className="teacher"
+            sx={styles.input}
+            autoComplete={true}
+            disabled={formData.discipline? false : true}
+            options={formData.discipline ? list.teacher.filter((i: any) =>
+                i.teacherDisciplines.map((i: any) =>
+                    i.disciplineId).includes(list.discipline.find((i: any) =>
+                    i.name === formData.discipline).id)).map((i: any) =>
+                    i.name)
+                : [""]}
+            renderInput={(e) =>
+                <TextField
+                {...e}
+                label="Pessoa Instrutora"
+                size="medium"
+                />}
+            onInputChange={(e, value) => handleAutoInput("teacher", value)}
         /> 
         <Box sx={styles.actionsContainer}>
-          <Button variant="contained" type="submit">
-            Enviar
+            <Button variant="contained" type="submit" sx={{ width:"697px", height:"46px" }}>
+            {loading ? "Carregando" : "Enviar" }
           </Button>
         </Box>
       </Box>
