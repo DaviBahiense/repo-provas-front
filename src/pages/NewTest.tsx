@@ -128,6 +128,7 @@ function FormDataTest({list}:any, token:any) {
             await api.createTest(test, token)
 
             setLoading(false)
+            setMessage({ type: "success", text: "Tudo certo! Prova criada." })
         } catch (error) {
             setMessage({ type: "error", text: "Ocorreu um erro após processamento" });
         }
